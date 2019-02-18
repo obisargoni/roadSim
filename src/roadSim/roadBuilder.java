@@ -36,7 +36,7 @@ public class roadBuilder implements ContextBuilder<Object> {
 		// Create road space
 		ContinuousSpaceFactory spaceFact = ContinuousSpaceFactoryFinder.createContinuousSpaceFactory(null);
 		ContinuousSpace <Object > road =spaceFact.createContinuousSpace("road", context ,new  SimpleCartesianAdder <Object>(),
-				new  repast.simphony.space.continuous.WrapAroundBorders (),50, 50);
+				new  repast.simphony.space.continuous.WrapAroundBorders (),roadLength, roadWidth);
 		
 		// Create vehicle agents
 		int numVehicles = 10;
@@ -44,9 +44,10 @@ public class roadBuilder implements ContextBuilder<Object> {
 		// Add them to the context
 		for (int i = 0; i<numVehicles;i++) {
 			// Set max speed and acceleration parameters for vehicle
-			int mS = 30;
-			int a = 3;
-			context.add(new Vehicle(road, mS,a));
+			int mS = 3;
+			double a = 0.3;
+			double s = 2.5; // Initial speed of all vehicles is 25ms-1
+			context.add(new Vehicle(road, mS,a,s));
 		}
 		
 		// Use list of ints from 0 to 50 as possible positions for the vehicles
@@ -56,7 +57,7 @@ public class roadBuilder implements ContextBuilder<Object> {
 		for (Object obj:context) {
 			int xCoordIndex = randx.nextInt(xCoords.size());
 			int xCoord = xCoords.get(xCoordIndex);
-			xCoords.remove(xCoordIndex); // To ensre that no two cars are initiated at the same spot
+			xCoords.remove(xCoordIndex); // To ensure that no two cars are initiated at the same spot
 			int yCoord = roadWidth / 2;
 			road.moveTo(obj, xCoord,yCoord);
 		}
