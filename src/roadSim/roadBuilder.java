@@ -32,16 +32,16 @@ public class roadBuilder implements ContextBuilder<Object> {
 		
 		int roadWidth = 10;
 		int roadLength = 50;
+		int numVehicles = 10; // Number of vehicles to include in the simulation
 		
 		// Create road space
 		ContinuousSpaceFactory spaceFact = ContinuousSpaceFactoryFinder.createContinuousSpaceFactory(null);
 		ContinuousSpace <Object > road =spaceFact.createContinuousSpace("road", context ,new  SimpleCartesianAdder <Object>(),
 				new  repast.simphony.space.continuous.WrapAroundBorders (),roadLength, roadWidth);
 		
-		// Create vehicle agents
-		int numVehicles = 10;
+
 		
-		// Add them to the context
+		// Add the vehicles to the context
 		for (int i = 0; i<numVehicles;i++) {
 			// Set max speed and acceleration parameters for vehicle
 			int mS = 3;
@@ -51,7 +51,7 @@ public class roadBuilder implements ContextBuilder<Object> {
 			context.add(new Vehicle(road, mS, flD, a, s));
 		}
 		
-		// Use list of ints from 0 to 50 as possible positions for the vehicles
+		// Use list of ints from 0 to roadLength as possible positions for the vehicles
 		List<Integer> xCoords = IntStream.range(0,roadLength).boxed().collect(Collectors.toList());
 		Random randx = new Random();
 		// Set the position of each vehicle
@@ -63,6 +63,14 @@ public class roadBuilder implements ContextBuilder<Object> {
 			road.moveTo(obj, xCoord,yCoord);
 		}
 		
+		
+		// Add a signal to the road - add 75% along road way
+		int sigXCoord = (roadLength / 4) * 3;
+		int sigYCoord = (roadWidth / 4) * 3;
+		Signal sig = new Signal(true);
+		context.add(sig);
+		road.moveTo(sig, sigXCoord, sigYCoord);
+		 
 		
 		return context;
 	}
