@@ -81,14 +81,27 @@ public class Vehicle {
 	/* Simply sets speed to be the speed of the vehicle in front
 	 * accounting for the acceleration or deceleration required to get 
 	 * to that speed in the next timestep. This assumes a fixed acceleration.
+	 * 
+	 * @param vehicleInFront Vehicle. The vehicle agent in front of this vehicle agent
+	 * @return Double. The speed set for this vehicle
 	 */
 	public double setSpeedSimple(Vehicle vehicleInFront) {
 		
 		// Set speed so that after one time step it will be the same as the car in front
 		if (vehicleInFront != null) {
-			// Get speed of vehicle in front
-			double infSpeed = vehicleInFront.getSpeed();
-			this.speed = infSpeed - (this.acc * stepToTimeRatio);
+			// Get location of vehicle in front
+			double vifXCoord = vehicleInFront.road.getLocation(vehicleInFront).getX();
+			
+			// If the vehicle in front is sufficiently cloes, adjust speed
+			if ((vifXCoord - this.road.getLocation(this).getX()) < this.followDist) {
+				// Get speed of vehicle in front
+				double infSpeed = vehicleInFront.getSpeed();
+				this.speed = infSpeed - (this.acc * stepToTimeRatio);
+			}
+			else {
+				// If the vehicle in front is not close enough speed up
+				this.speed = this.speed + (this.acc * stepToTimeRatio);
+			}
 		} 
 		// If there is no vehicle in front just speed up
 		else {
@@ -130,9 +143,14 @@ public class Vehicle {
 		return this.acc;
 	}
 	
-	/* Calculates the new location for the ego vehicle using the
-	 * vehicle's speed and acceleration. Ensures that ego vehicle does 
-	 * not overtake the vehicle in from
+	/* 
+	 * Drive the vehicle agent. Set the vehicle agent's speed and update the 
+	 * x-coordinate of the vehicle using its current speed and acceleration and
+	 * preventing overtaking. Move the vehicle agent to its new location.
+	 * 
+	 * Prevention of overtaking is not currently working.
+	 * 
+	 * @param vehicleInFront Vehicle. The vehicle in front of the agent vehicle  
 	 * 
 	 */
 	public void drive(Vehicle vehicleInFront) {
@@ -144,13 +162,43 @@ public class Vehicle {
 		NdPoint currPos = this.road.getLocation(this);
 		double newXCoord = currPos.getX() + this.speed * stepToTimeRatio + 0.5 * this.acc * Math.pow(stepToTimeRatio, 2);
 		
-		// Prevent vehicle from moving past the vehicle in front by checking that the
-		// Use modulo since space is wrap around
+		// Prevent overtaking (currently producing unexpected behaviour)
+		//newXCoord = preventOvertake(newXCoord, vehicleInFront);
 		
+		this.road.moveTo(this, newXCoord, currPos.getY());
 		
-		this.road.moveTo(this, newXCoord, currPos.getY());;
 	}
 	
+	/*
+	 * If the vehicle in front is not null, check if the new x-coordinate
+	 * for this agent does not exceed the x-coordinate of the vehicle in front.
+	 * If it does, set the new x-coordinate to be slightly behind the vehicle in front.
+	 * 
+	 *  @param nXC Double. The new x-coordinate of this agent
+	 *  @param vIF Vehicle. The vehicle agent in front of this agent.
+	 *  @return Double. The x-coordinate to move this agent to that avoids overtaking.
+	 */
+	public double preventOvertake(double nXC, Vehicle vIF) {
+		// Prevent vehicle from moving past the vehicle in front by checking that the
+		if (vIF == null) {
+			// There is not vehicle in front so don't need to worry about overtaking
+			// What about looping round and overtaking an agent though?
+			return nXC;	
+		}
+		else {
+			double vifXC = vIF.road.getLocation(vIF).getX();
+			if (nXC > vifXC) {
+				// Assumes cars need to be a distance of 1 apart
+				nXC = vIF.road.getLocation(vIF).getX() - 1;				
+			}
+			
+			return nXC;
+		}	
+	}
+	
+	/*
+	* Move the agent in the positive x direction 10 units.
+	*/
 	public void moveForward() {
 		// Get current position
 		NdPoint currPos = this.road.getLocation(this);
