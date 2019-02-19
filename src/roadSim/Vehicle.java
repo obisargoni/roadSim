@@ -6,16 +6,17 @@ import repast.simphony.space.continuous.NdPoint;
 
 public class Vehicle {
 	
-	private int maxSpeed;
+	private int maxSpeed, followDist; // The distance from a vehicle ahead at which the agent adjusts speed to follow
 	private double speed, acc;
 	private double stepToTimeRatio = 1; // This will need to be set at a high level to control the graularity of time
 	private ContinuousSpace<Object> road;
 	
-	public Vehicle(ContinuousSpace<Object> road, int mS, double a, double s) {
+	public Vehicle(ContinuousSpace<Object> road, int mS, int flD, double a, double s) {
 		this.road = road;
 		this.maxSpeed = mS;
 		this.acc = a;
 		this.speed = s;
+		this.followDist = flD; 
 	}
 	
 	public double getSpeed() {

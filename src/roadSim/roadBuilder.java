@@ -45,9 +45,10 @@ public class roadBuilder implements ContextBuilder<Object> {
 		for (int i = 0; i<numVehicles;i++) {
 			// Set max speed and acceleration parameters for vehicle
 			int mS = 3;
-			double a = 0.3;
-			double s = 2.5; // Initial speed of all vehicles is 25ms-1
-			context.add(new Vehicle(road, mS,a,s));
+			int flD = 3;
+			double a = 0.1;
+			double s = 0.5; // Initial speed of all vehicles is 25ms-1
+			context.add(new Vehicle(road, mS, flD, a, s));
 		}
 		
 		// Use list of ints from 0 to 50 as possible positions for the vehicles
