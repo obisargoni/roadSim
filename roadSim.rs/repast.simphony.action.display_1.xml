@@ -6,10 +6,18 @@
       <string>roadSim.Vehicle</string>
       <string>repast.simphony.visualizationOGL2D.DefaultStyleOGL2D</string>
     </entry>
+    <entry>
+      <string>roadSim.Signal</string>
+      <string>roadSim.SignalStyler</string>
+    </entry>
   </styles>
   <editedStyles>
     <entry>
       <string>roadSim.Vehicle</string>
+      <null/>
+    </entry>
+    <entry>
+      <string>roadSim.Signal</string>
       <null/>
     </entry>
   </editedStyles>
@@ -23,7 +31,7 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>-505862083</hashCode>
+    <hashCode>790529105</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
   <layoutProjection>road</layoutProjection>
@@ -31,6 +39,10 @@
   <layerOrder>
     <entry>
       <string>roadSim.Vehicle</string>
+      <int>1</int>
+    </entry>
+    <entry>
+      <string>roadSim.Signal</string>
       <int>0</int>
     </entry>
   </layerOrder>
