@@ -1,20 +1,23 @@
 package roadSim;
 
+import repast.simphony.context.Context;
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.NdPoint;
+import repast.simphony.util.ContextUtils;
+import repast.simphony.util.collections.IndexedIterable;
 
 public class Vehicle {
 	
 	private int maxSpeed, followDist; // The distance from a vehicle ahead at which the agent adjusts speed to follow
-	private double speed, acc;
+	private double speed, acc, dacc;
 	private double stepToTimeRatio = 1; // This will need to be set at a high level to control the graularity of time
 	private ContinuousSpace<Object> road;
 	
 	public Vehicle(ContinuousSpace<Object> road, int mS, int flD, double a, double s) {
 		this.road = road;
 		this.maxSpeed = mS;
-		this.acc = a;
+		this.acc = this.dacc = a;
 		this.speed = s;
 		this.followDist = flD; 
 	}
@@ -89,7 +92,7 @@ public class Vehicle {
 	 * @param vehicleInFront Vehicle. The vehicle agent in front of this vehicle agent
 	 * @return Double. The speed set for this vehicle
 	 */
-	public double setSpeedSimple(Vehicle vehicleInFront) {
+	public double setSpeedFollowing(Vehicle vehicleInFront) {
 		
 		// Set speed so that after one time step it will be the same as the car in front
 		if (vehicleInFront != null) {
@@ -122,6 +125,29 @@ public class Vehicle {
 		}
 		return this.speed;
 		
+	}
+	
+	/*
+	 * Set the speed and acceleration of the vehicle agent such that it will
+	 * come to a complete stop at the signal.
+	 * 
+	 *  Doesn't account for leaving space for other cars.
+	 */
+	public double setSpeedSignal(Signal s) {
+		double sigX = this.road.getLocation(s).getX();
+		double vX = this.road.getLocation(this).getX();
+		double d = sigX - vX;
+		
+
+		this.dacc = Math.pow(this.speed, 2) / (2 * d); // Get required deceleration using eqns of constant a
+		this.speed = this.speed - (this.dacc * stepToTimeRatio); // Might still need to take account of following the car ahead?
+		
+		// Min speed is zero (no-reversing)
+		if (this.speed < 0) {
+			this.speed = 0;
+		}
+		
+		return this.speed;
 	}
 	
 	/* Updates the vehicle's acceleration using
@@ -158,13 +184,29 @@ public class Vehicle {
 	 * 
 	 */
 	public void drive(Vehicle vehicleInFront) {
-		// Update speed and acceleration
-		setSpeedSimple(vehicleInFront);
-		//setAcc(vehicleInFront);
+		
+		// Check for a traffic signal
+		boolean sigState = checkSignal();
+		NdPoint currPos = this.road.getLocation(this);
+		double newXCoord = currPos.getX(); // Initialise new x coordinate as the current position
+		
+		if (sigState == true) {
+			// Continue driving by following car ahead
+			// Update speed and acceleration
+			setSpeedFollowing(vehicleInFront);
+			newXCoord = currPos.getX() + this.speed * stepToTimeRatio + 0.5 * this.acc * Math.pow(stepToTimeRatio, 2);
+
+			//setAcc(vehicleInFront);
+		} else if (sigState == false) {
+			// Set speed based on distance from signal
+			Signal sig = getSignal();
+			setSpeedSignal(sig);
+			newXCoord = currPos.getX() + this.speed * stepToTimeRatio - 0.5 * this.dacc * Math.pow(stepToTimeRatio, 2);
+		}
+
 		
 		// Update position
-		NdPoint currPos = this.road.getLocation(this);
-		double newXCoord = currPos.getX() + this.speed * stepToTimeRatio + 0.5 * this.acc * Math.pow(stepToTimeRatio, 2);
+		
 		
 		// Prevent overtaking (currently producing unexpected behaviour)
 		//newXCoord = preventOvertake(newXCoord, vehicleInFront);
@@ -208,5 +250,45 @@ public class Vehicle {
 		NdPoint currPos = this.road.getLocation(this);
 		this.road.moveTo(this, currPos.getX() + 10, currPos.getY());
 	}
+	
+	/*
+	 * Get the signal agent in the road continuous space
+	 * 
+	 * @return Signal. The signal agent
+	 */
+	public Signal getSignal() {
+		Signal sig = null;
+		for (Object o: this.road.getObjects()) {
+			if (o instanceof Signal) {
+				sig = (Signal) o;
+			}		
+		}
+		
+		return sig;
+	}
+	
+	/*
+	 * Identify the signal agent in the space and how far away it is.
+	 * If signal agent is within a threshold distance get the state of the signal
+	 * 
+	 * @return Boolean. True if there is no need to adjust driving. False if signal means stop.
+	 */
+	public boolean checkSignal() {
+		double threshDist = 5; // Distance at which drivers will alter behaviour depending on signal
+		Signal sig = getSignal();
 
+		// First check if vehicle has past the signal, in which case there is no signal to check
+		double sigX =  this.road.getLocation(sig).getX();
+		double vX = this.road.getLocation(this).getX();
+		if (vX > sigX) {
+			return true;
+		}
+		else if ((sigX - vX) < threshDist) {
+			return sig.getState();
+		}
+		else {
+			return true;
+		}
+			
+	}
 }
