@@ -36,18 +36,23 @@ public class Vehicle {
 		//moveForward();
 	}
 	
+	/* Get the vehicle agent that is closest in front of this vehicle agent.
+	 * 
+	 * How to handle wrap around?
+	 * Is a minimum distance necessary?
+	 */
 	public Vehicle getNearestVehicle() {
 		// Initialise variables
 		Vehicle nearestVehicle = null;
-		double minSep = 3; // Beyond this distance vehicles wont interact
+		double minSep = this.road.getDimensions().getWidth(); // Initialise the minimum separation as whole road width
 		
-		// Get the speed of the car in front
-		// This models the ability of drivers to assess the speed of the vehicle in front
+		// Get the vehicles that is closest in front to this agent
 		for (Object v: this.road.getObjects()) {
 			double sep = road.getLocation(v).getX() - road.getLocation(this).getX();
 			// Don't consider vehicles that are behind the target vehicle
-			if (sep < minSep & Math.signum(sep) == -1.0) {
-				nearestVehicle = (Vehicle) v;	
+			if (sep < minSep & Math.signum(sep) == 1.0) {
+				nearestVehicle = (Vehicle) v;
+				minSep = sep;
 			}
 		}
 		
