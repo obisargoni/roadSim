@@ -48,13 +48,17 @@ public class Vehicle {
 		double minSep = this.road.getDimensions().getWidth(); // Initialise the minimum separation as whole road width
 		
 		// Get the vehicles that is closest in front to this agent
-		for (Object v: this.road.getObjects()) {
-			double sep = road.getLocation(v).getX() - road.getLocation(this).getX();
-			// Don't consider vehicles that are behind the target vehicle
-			if (sep < minSep & Math.signum(sep) == 1.0) {
-				nearestVehicle = (Vehicle) v;
-				minSep = sep;
+		// There is probably a more direct way of iterating over the Vehicle agents
+		for (Object o: this.road.getObjects()) {
+			if (o instanceof Vehicle) {
+				double sep = road.getLocation(o).getX() - road.getLocation(this).getX();
+				// Don't consider vehicles that are behind the target vehicle
+				if (sep < minSep & Math.signum(sep) == 1.0) {
+					nearestVehicle = (Vehicle) o;
+					minSep = sep;
+				}
 			}
+
 		}
 		
 		return nearestVehicle;
