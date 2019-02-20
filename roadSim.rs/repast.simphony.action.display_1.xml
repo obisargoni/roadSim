@@ -1,5 +1,5 @@
 <repast.simphony.visualization.engine.CartesianDisplayDescriptor simphonyVersion="2.6.0">
-  <name>Road Display</name>
+  <name>space Display</name>
   <type>2D</type>
   <styles>
     <entry>
@@ -34,11 +34,11 @@
     <hashCode>790529105</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
-  <layoutProjection>road</layoutProjection>
+  <layoutProjection>space</layoutProjection>
   <layoutInterval>0</layoutInterval>
   <layerOrder>
     <entry>
-      <string>roadSim.Vehicle</string>
+      <string>spaceSim.Vehicle</string>
       <int>1</int>
     </entry>
     <entry>
@@ -48,7 +48,7 @@
   </layerOrder>
   <projections>
     <repast.simphony.scenario.data.ProjectionData>
-      <id>road</id>
+      <id>space</id>
       <attributes/>
       <type>continuous space</type>
     </repast.simphony.scenario.data.ProjectionData>
@@ -58,7 +58,7 @@
   </visualizationProperties>
   <projectionDescriptors>
     <entry>
-      <string>road</string>
+      <string>space</string>
       <repast.simphony.visualization.continuous.ContinuousProjectionDescriptor>
         <proj reference="../../../../projections/repast.simphony.scenario.data.ProjectionData"/>
         <props>

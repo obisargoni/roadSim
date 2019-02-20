@@ -1,3 +1,3 @@
 <context id="roadSim" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://repast.org/scenario/context">
-  	<projection id="road" type="continuous space"></projection>
+  	<projection id="space" type="continuous space"></projection>
 </context>

@@ -10,16 +10,17 @@ import repast.simphony.util.collections.IndexedIterable;
 public class Vehicle {
 	
 	private int maxSpeed, followDist; // The distance from a vehicle ahead at which the agent adjusts speed to follow
-	private double speed, acc, dacc, buffer;
+	private double speed, acc, dacc, bearing, buffer;
 	private double stepToTimeRatio = 1; // This will need to be set at a high level to control the graularity of time
-	private ContinuousSpace<Object> road;
+	private ContinuousSpace<Object> space;
 	
-	public Vehicle(ContinuousSpace<Object> road, int mS, int flD, double a, double s) {
-		this.road = road;
+	public Vehicle(ContinuousSpace<Object> space, int mS, int flD, double a, double s, double brng) {
+		this.space = space;
 		this.maxSpeed = mS;
 		this.acc = this.dacc = a;
 		this.speed = s;
 		this.followDist = flD; 
+		this.bearing = brng;
 		this.buffer = 2; // Min distance to keep between vehicles or between vehicle and a signal
 	}
 	
@@ -28,7 +29,7 @@ public class Vehicle {
 	}
 	
 	/* Default behaviour, shuffle = true, randomised the scheduling
-	 * of collections of agents. In the case of a road, the process may not be random
+	 * of collections of agents. In the case of a space, the process may not be random
 	 * since the vehicle in the front might have priority.
 	 */
 	@ScheduledMethod(start = 1, interval = 1, shuffle = true)
@@ -49,13 +50,13 @@ public class Vehicle {
 	public Vehicle getNearestVehicle() {
 		// Initialise variables
 		Vehicle nearestVehicle = null;
-		double minSep = this.road.getDimensions().getWidth(); // Initialise the minimum separation as whole road width
+		double minSep = this.space.getDimensions().getWidth(); // Initialise the minimum separation as whole space width
 		
 		// Get the vehicles that is closest in front to this agent
 		// There is probably a more direct way of iterating over the Vehicle agents
-		for (Object o: this.road.getObjects()) {
+		for (Object o: this.space.getObjects()) {
 			if (o instanceof Vehicle) {
-				double sep = road.getLocation(o).getX() - road.getLocation(this).getX();
+				double sep = space.getLocation(o).getX() - space.getLocation(this).getX();
 				// Don't consider vehicles that are behind the target vehicle
 				if (sep < minSep & Math.signum(sep) == 1.0) {
 					nearestVehicle = (Vehicle) o;
@@ -98,10 +99,10 @@ public class Vehicle {
 		// Set speed so that after one time step it will be the same as the car in front
 		if (vehicleInFront != null) {
 			// Get location of vehicle in front
-			double vifXCoord = vehicleInFront.road.getLocation(vehicleInFront).getX();
+			double vifXCoord = vehicleInFront.space.getLocation(vehicleInFront).getX();
 			
 			// If the vehicle in front is sufficiently cloes, adjust speed
-			if ((vifXCoord - this.road.getLocation(this).getX()) < this.followDist) {
+			if ((vifXCoord - this.space.getLocation(this).getX()) < this.followDist) {
 				// Get speed of vehicle in front
 				double vifSpeed = vehicleInFront.getSpeed();
 				this.speed = vifSpeed - (this.acc * stepToTimeRatio);
@@ -136,14 +137,14 @@ public class Vehicle {
 	 */
 	public double setSpeedSignal(Signal s, Vehicle vehicleInFront) {
 		double d; // initialise the distance the vehicle must stop in
-		double sigX = this.road.getLocation(s).getX();
-		double vX = this.road.getLocation(this).getX();
+		double sigX = this.space.getLocation(s).getX();
+		double vX = this.space.getLocation(this).getX();
 		
 		if (vehicleInFront == null) {
 			d = sigX - vX - this.buffer;
 		}
 		else {
-			double vifX = this.road.getLocation(vehicleInFront).getX();
+			double vifX = this.space.getLocation(vehicleInFront).getX();
 			
 			// Depending on whether the vehicle in front or the signal is closer, set the stopping distance
 			if (vifX < sigX) {
@@ -180,7 +181,7 @@ public class Vehicle {
 		if (vehicleInFront != null) {
 			int alpha, m, l;
 			alpha = m = l = 1; // Parameters for the car following model. Needs refactor.
-			this.acc = (((alpha * Math.pow(this.speed,m)) / Math.pow(this.road.getLocation(vehicleInFront).getX() - this.road.getLocation(this).getX(),l)) * (vehicleInFront.getSpeed() - this.speed));
+			this.acc = (((alpha * Math.pow(this.speed,m)) / Math.pow(this.space.getLocation(vehicleInFront).getX() - this.space.getLocation(this).getX(),l)) * (vehicleInFront.getSpeed() - this.speed));
 		} else {
 			// Set acceleration to zero. This is not realistic, needs refining
 			this.acc = 0;
@@ -203,31 +204,24 @@ public class Vehicle {
 		
 		// Check for a traffic signal
 		boolean sigState = checkSignal();
-		NdPoint currPos = this.road.getLocation(this);
-		double newXCoord = currPos.getX(); // Initialise new x coordinate as the current position
+		double disp = 0; // Initialise the amount to move the vehicle by
 		
 		if (sigState == true) {
 			// Continue driving by following car ahead
 			// Update speed and acceleration
 			setSpeedFollowing(vehicleInFront);
-			newXCoord = currPos.getX() + this.speed * stepToTimeRatio + 0.5 * this.acc * Math.pow(stepToTimeRatio, 2);
+			disp = this.speed * stepToTimeRatio + 0.5 * this.acc * Math.pow(stepToTimeRatio, 2);
 
 			//setAcc(vehicleInFront);
 		} else if (sigState == false) {
 			// Set speed based on distance from signal
 			Signal sig = getSignal();
 			setSpeedSignal(sig, vehicleInFront);
-			newXCoord = currPos.getX() + this.speed * stepToTimeRatio - 0.5 * this.dacc * Math.pow(stepToTimeRatio, 2);
+			disp = this.speed * stepToTimeRatio - 0.5 * this.dacc * Math.pow(stepToTimeRatio, 2);
 		}
-
 		
-		// Update position
-		
-		
-		// Prevent overtaking (currently producing unexpected behaviour)
-		//newXCoord = preventOvertake(newXCoord, vehicleInFront);
-		
-		this.road.moveTo(this, newXCoord, currPos.getY());
+		//this.space.moveTo(this, newXCoord, currPos.getY());
+		this.space.moveByVector(this, disp, this.bearing,0);
 		
 	}
 	
@@ -248,10 +242,10 @@ public class Vehicle {
 			return nXC;	
 		}
 		else {
-			double vifXC = vIF.road.getLocation(vIF).getX();
+			double vifXC = vIF.space.getLocation(vIF).getX();
 			if (nXC > vifXC) {
 				// Assumes cars need to be a distance of 1 apart
-				nXC = vIF.road.getLocation(vIF).getX() - 1;				
+				nXC = vIF.space.getLocation(vIF).getX() - 1;				
 			}
 			
 			return nXC;
@@ -263,18 +257,18 @@ public class Vehicle {
 	*/
 	public void moveForward() {
 		// Get current position
-		NdPoint currPos = this.road.getLocation(this);
-		this.road.moveTo(this, currPos.getX() + 10, currPos.getY());
+		NdPoint currPos = this.space.getLocation(this);
+		this.space.moveTo(this, currPos.getX() + 10, currPos.getY());
 	}
 	
 	/*
-	 * Get the signal agent in the road continuous space
+	 * Get the signal agent in the space continuous space
 	 * 
 	 * @return Signal. The signal agent
 	 */
 	public Signal getSignal() {
 		Signal sig = null;
-		for (Object o: this.road.getObjects()) {
+		for (Object o: this.space.getObjects()) {
 			if (o instanceof Signal) {
 				sig = (Signal) o;
 			}		
@@ -294,8 +288,8 @@ public class Vehicle {
 		Signal sig = getSignal();
 
 		// First check if vehicle has past the signal, in which case there is no signal to check
-		double sigX =  this.road.getLocation(sig).getX();
-		double vX = this.road.getLocation(this).getX();
+		double sigX =  this.space.getLocation(sig).getX();
+		double vX = this.space.getLocation(this).getX();
 		if (vX > sigX) {
 			return true;
 		}
