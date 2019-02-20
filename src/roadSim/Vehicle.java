@@ -4,6 +4,7 @@ import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.grid.Grid;
+import repast.simphony.space.grid.GridPoint;
 
 public class Vehicle {
 	
@@ -48,23 +49,26 @@ public class Vehicle {
 	 * Is a minimum distance necessary?
 	 */
 	public Vehicle getVehicleInFront() {
+		
 		// Initialise variables
 		Vehicle vehicleInFront = null;
 		double minSep = this.space.getDimensions().getWidth(); // Initialise the minimum separation as whole space width
 		
-		
-		// Get the vehicles that is closest in front to this agent
-		// There is probably a more direct way of iterating over the Vehicle agents
-		for (Object o: this.space.getObjects()) {
-			if (o instanceof Vehicle) {
-				double sep = space.getLocation(o).getX() - space.getLocation(this).getX();
+		// Iterate over the coordinates of grid cells ahead of this agent vehicle
+		GridPoint thisPt =  grid.getLocation(this); 
+		for (int i = thisPt.getX(); i <= Math.min(this.space.getDimensions().getWidth(), thisPt.getX() + this.followDist); i++) {
+			Iterable<Object> vIt = grid.getObjectsAt(i, thisPt.getY());
+			
+			// Iterate over objects at grid location (iterable could be empty)
+			for (Object o : vIt) {
+				// Get the position of the vehicle and calculate the separation
+				double sep = space.getDistance(space.getLocation(this), space.getLocation(o) );
 				// Don't consider vehicles that are behind the target vehicle
 				if (sep < minSep & Math.signum(sep) == 1.0) {
 					vehicleInFront = (Vehicle) o;
 					minSep = sep;
 				}
 			}
-
 		}
 		
 		return vehicleInFront;
