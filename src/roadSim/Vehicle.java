@@ -1,11 +1,9 @@
 package roadSim;
 
-import repast.simphony.context.Context;
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.NdPoint;
-import repast.simphony.util.ContextUtils;
-import repast.simphony.util.collections.IndexedIterable;
+import repast.simphony.space.grid.Grid;
 
 public class Vehicle {
 	
@@ -13,9 +11,11 @@ public class Vehicle {
 	private double speed, acc, dacc, bearing, buffer;
 	private double stepToTimeRatio = 1; // This will need to be set at a high level to control the graularity of time
 	private ContinuousSpace<Object> space;
+	private Grid<Object> grid;
 	
-	public Vehicle(ContinuousSpace<Object> space, int mS, int flD, double a, double s, double brng) {
+	public Vehicle(ContinuousSpace<Object> space, Grid<Object> grid, int mS, int flD, double a, double s, double brng) {
 		this.space = space;
+		this.grid = grid;
 		this.maxSpeed = mS;
 		this.acc = this.dacc = a;
 		this.speed = s;
@@ -35,10 +35,10 @@ public class Vehicle {
 	@ScheduledMethod(start = 1, interval = 1, shuffle = true)
 	public void step() {
 		// Check for nearby cars
-		Vehicle nearestVehicle = getNearestVehicle();
+		Vehicle vehicleInFront = getVehicleInFront();
 		
 		// Drive
-		drive(nearestVehicle);
+		drive(vehicleInFront);
 		//moveForward();
 	}
 	
@@ -47,10 +47,11 @@ public class Vehicle {
 	 * How to handle wrap around?
 	 * Is a minimum distance necessary?
 	 */
-	public Vehicle getNearestVehicle() {
+	public Vehicle getVehicleInFront() {
 		// Initialise variables
-		Vehicle nearestVehicle = null;
+		Vehicle vehicleInFront = null;
 		double minSep = this.space.getDimensions().getWidth(); // Initialise the minimum separation as whole space width
+		
 		
 		// Get the vehicles that is closest in front to this agent
 		// There is probably a more direct way of iterating over the Vehicle agents
@@ -59,14 +60,14 @@ public class Vehicle {
 				double sep = space.getLocation(o).getX() - space.getLocation(this).getX();
 				// Don't consider vehicles that are behind the target vehicle
 				if (sep < minSep & Math.signum(sep) == 1.0) {
-					nearestVehicle = (Vehicle) o;
+					vehicleInFront = (Vehicle) o;
 					minSep = sep;
 				}
 			}
 
 		}
 		
-		return nearestVehicle;
+		return vehicleInFront;
 	}
 	
 	/* 
@@ -220,8 +221,10 @@ public class Vehicle {
 			disp = this.speed * stepToTimeRatio - 0.5 * this.dacc * Math.pow(stepToTimeRatio, 2);
 		}
 		
-		//this.space.moveTo(this, newXCoord, currPos.getY());
-		this.space.moveByVector(this, disp, this.bearing,0);
+		// Move the agent in the space and the grid
+		space.moveByVector(this, disp, this.bearing,0);
+		NdPoint thisPt = space.getLocation(this);
+		grid.moveTo(this , (int)thisPt.getX(), (int)thisPt.getY ());
 		
 	}
 	

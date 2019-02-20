@@ -11,9 +11,15 @@ import java.util.stream.IntStream;
 import repast.simphony.context.Context;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactory;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactoryFinder;
+import repast.simphony.context.space.grid.GridFactory;
+import repast.simphony.context.space.grid.GridFactoryFinder;
 import repast.simphony.dataLoader.ContextBuilder;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.SimpleCartesianAdder;
+import repast.simphony.space.grid.Grid;
+import repast.simphony.space.grid.GridBuilderParameters;
+import repast.simphony.space.grid.SimpleGridAdder;
+import repast.simphony.space.grid.WrapAroundBorders;
 
 /**
  * @author Obi
@@ -39,6 +45,9 @@ public class roadBuilder implements ContextBuilder<Object> {
 		ContinuousSpace <Object > space =spaceFact.createContinuousSpace("space", context ,new  SimpleCartesianAdder <Object>(),
 				new  repast.simphony.space.continuous.WrapAroundBorders (),spaceWidth, spaceHeight);
 		
+		GridFactory gridFact = GridFactoryFinder.createGridFactory(null);
+		Grid<Object> grid = gridFact.createGrid("grid", context, new GridBuilderParameters( new WrapAroundBorders(), 
+				new SimpleGridAdder<Object>(), true, spaceWidth,spaceHeight));
 		
 		// Add the vehicles to the context
 		for (int i = 0; i<numVehicles;i++) {
@@ -48,7 +57,7 @@ public class roadBuilder implements ContextBuilder<Object> {
 			double a = 0.1;
 			double s = 0.5; // Initial speed of all vehicles is the same
 			double brng = 0; // Sets the direction of travel of the agent vehicle
-			context.add(new Vehicle(space, mS, flD, a, s, brng));
+			context.add(new Vehicle(space, grid, mS, flD, a, s, brng));
 		}
 		
 		// Use list of ints from 0 to spaceWidth as possible positions for the vehicles
@@ -61,6 +70,7 @@ public class roadBuilder implements ContextBuilder<Object> {
 			xCoords.remove(xCoordIndex); // To ensure that no two cars are initiated at the same spot
 			int yCoord = spaceHeight / 2; // Places vehicles half way up the sapce
 			space.moveTo(obj, xCoord,yCoord);
+			grid.moveTo(obj, xCoord, yCoord);
 		}
 		
 		
@@ -70,6 +80,7 @@ public class roadBuilder implements ContextBuilder<Object> {
 		Signal sig = new Signal(true);
 		context.add(sig);
 		space.moveTo(sig, sigXCoord, sigYCoord);
+		grid.moveTo(sig, sigXCoord, sigYCoord);
 		 
 		
 		return context;
