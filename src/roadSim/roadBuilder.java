@@ -45,7 +45,7 @@ public class roadBuilder implements ContextBuilder<Object> {
 		for (int i = 0; i<numVehicles;i++) {
 			// Set max speed and acceleration parameters for vehicle
 			int mS = 3;
-			int flD = 3;
+			int flD = 5; // This distance needs to be greater than the maximum distance that can be traveled in a single timestep
 			double a = 0.1;
 			double s = 0.5; // Initial speed of all vehicles is 25ms-1
 			context.add(new Vehicle(road, mS, flD, a, s));
