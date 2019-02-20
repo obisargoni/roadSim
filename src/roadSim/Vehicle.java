@@ -10,7 +10,7 @@ import repast.simphony.util.collections.IndexedIterable;
 public class Vehicle {
 	
 	private int maxSpeed, followDist; // The distance from a vehicle ahead at which the agent adjusts speed to follow
-	private double speed, acc, dacc;
+	private double speed, acc, dacc, buffer;
 	private double stepToTimeRatio = 1; // This will need to be set at a high level to control the graularity of time
 	private ContinuousSpace<Object> road;
 	
@@ -20,6 +20,7 @@ public class Vehicle {
 		this.acc = this.dacc = a;
 		this.speed = s;
 		this.followDist = flD; 
+		this.buffer = 2; // Min distance to keep between vehicles or between vehicle and a signal
 	}
 	
 	public double getSpeed() {
@@ -102,8 +103,8 @@ public class Vehicle {
 			// If the vehicle in front is sufficiently cloes, adjust speed
 			if ((vifXCoord - this.road.getLocation(this).getX()) < this.followDist) {
 				// Get speed of vehicle in front
-				double infSpeed = vehicleInFront.getSpeed();
-				this.speed = infSpeed - (this.acc * stepToTimeRatio);
+				double vifSpeed = vehicleInFront.getSpeed();
+				this.speed = vifSpeed - (this.acc * stepToTimeRatio);
 			}
 			else {
 				// If the vehicle in front is not close enough speed up
@@ -133,10 +134,25 @@ public class Vehicle {
 	 * 
 	 *  Doesn't account for leaving space for other cars.
 	 */
-	public double setSpeedSignal(Signal s) {
+	public double setSpeedSignal(Signal s, Vehicle vehicleInFront) {
+		double d; // initialise the distance the vehicle must stop in
 		double sigX = this.road.getLocation(s).getX();
 		double vX = this.road.getLocation(this).getX();
-		double d = sigX - vX;
+		
+		if (vehicleInFront == null) {
+			d = sigX - vX - this.buffer;
+		}
+		else {
+			double vifX = this.road.getLocation(vehicleInFront).getX();
+			
+			// Depending on whether the vehicle in front or the signal is closer, set the stopping distance
+			if (vifX < sigX) {
+				d = vifX - vX - this.buffer;
+			}
+			else {
+				d = sigX - vX - this.buffer;
+			}
+		}
 		
 
 		this.dacc = Math.pow(this.speed, 2) / (2 * d); // Get required deceleration using eqns of constant a
@@ -200,7 +216,7 @@ public class Vehicle {
 		} else if (sigState == false) {
 			// Set speed based on distance from signal
 			Signal sig = getSignal();
-			setSpeedSignal(sig);
+			setSpeedSignal(sig, vehicleInFront);
 			newXCoord = currPos.getX() + this.speed * stepToTimeRatio - 0.5 * this.dacc * Math.pow(stepToTimeRatio, 2);
 		}
 
