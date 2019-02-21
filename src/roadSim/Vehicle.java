@@ -266,43 +266,7 @@ public class Vehicle {
 
 	}
 
-	/*
-	 * If the vehicle in front is not null, check if the new x-coordinate for this
-	 * agent does not exceed the x-coordinate of the vehicle in front. If it does,
-	 * set the new x-coordinate to be slightly behind the vehicle in front.
-	 * 
-	 * @param nXC Double. The new x-coordinate of this agent
-	 * 
-	 * @param vIF Vehicle. The vehicle agent in front of this agent.
-	 * 
-	 * @return Double. The x-coordinate to move this agent to that avoids
-	 * overtaking.
-	 */
-	public double preventOvertake(double nXC, Vehicle vIF) {
-		// Prevent vehicle from moving past the vehicle in front by checking that the
-		if (vIF == null) {
-			// There is not vehicle in front so don't need to worry about overtaking
-			// What about looping round and overtaking an agent though?
-			return nXC;
-		} else {
-			double vifXC = vIF.space.getLocation(vIF).getX();
-			if (nXC > vifXC) {
-				// Assumes cars need to be a distance of 1 apart
-				nXC = vIF.space.getLocation(vIF).getX() - 1;
-			}
 
-			return nXC;
-		}
-	}
-
-	/*
-	 * Move the agent in the positive x direction 10 units.
-	 */
-	public void moveForward() {
-		// Get current position
-		NdPoint currPos = this.space.getLocation(this);
-		this.space.moveTo(this, currPos.getX() + 10, currPos.getY());
-	}
 
 	/*
 	 * Get the signal agent in the space continuous space
