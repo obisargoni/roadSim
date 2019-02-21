@@ -8,19 +8,20 @@ import repast.simphony.space.grid.GridPoint;
 
 public class Vehicle {
 	
-	private int maxSpeed, followDist; // The distance from a vehicle ahead at which the agent adjusts speed to follow
+	private int maxSpeed, followDist, sigIdDist; // The distance from a vehicle ahead at which the agent adjusts speed to follow
 	private double speed, acc, dacc, bearing, buffer;
 	private double stepToTimeRatio = 1; // This will need to be set at a high level to control the graularity of time
 	private ContinuousSpace<Object> space;
 	private Grid<Object> grid;
 	
-	public Vehicle(ContinuousSpace<Object> space, Grid<Object> grid, int mS, int flD, double a, double s, double brng) {
+	public Vehicle(ContinuousSpace<Object> space, Grid<Object> grid, int mS, int flD, int sIdD, double a, double s, double brng) {
 		this.space = space;
 		this.grid = grid;
 		this.maxSpeed = mS;
 		this.acc = this.dacc = a;
 		this.speed = s;
-		this.followDist = flD; 
+		this.followDist = flD;
+		this.sigIdDist = sIdD;
 		this.bearing = brng;
 		this.buffer = 2; // Min distance to keep between vehicles or between vehicle and a signal
 	}
@@ -61,7 +62,10 @@ public class Vehicle {
 			
 			// Iterate over objects at grid location (iterable could be empty)
 			for (Object o : vIt) {
-				// Get the position of the vehicle and calculate the separation
+				/* Get the position of the vehicle and calculate the separation.
+				 * This distance is always positive, but this shouldn't matter since the 
+				 * original search only considered vehicles in the positive x direction.
+				 */
 				double sep = space.getDistance(space.getLocation(this), space.getLocation(o) );
 				// Don't consider vehicles that are behind the target vehicle
 				if (sep < minSep & Math.signum(sep) == 1.0) {
@@ -214,6 +218,7 @@ public class Vehicle {
 			//setAcc(vehicleInFront);
 		} else if (sigState == false) {
 			// Set speed based on distance from signal
+			// In this case signal will be within a certain distance of the vehicle
 			Signal sig = getSignal();
 			setSpeedSignal(sig, vehicleInFront);
 			disp = this.speed * stepToTimeRatio - 0.5 * this.dacc * Math.pow(stepToTimeRatio, 2);
