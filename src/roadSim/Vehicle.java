@@ -101,21 +101,15 @@ public class Vehicle {
 	 */
 	public double setSpeedFollowing(Vehicle vehicleInFront) {
 		
-		// Set speed so that after one time step it will be the same as the car in front
+		/* Set speed so that after one time step it will be the same as the car in front
+		 * The vehicle in front is not null only if it is within the following distance of this
+		 * agent vehicle.
+		 */
 		if (vehicleInFront != null) {
-			// Get location of vehicle in front
-			double vifXCoord = vehicleInFront.space.getLocation(vehicleInFront).getX();
-			
-			// If the vehicle in front is sufficiently cloes, adjust speed
-			if ((vifXCoord - this.space.getLocation(this).getX()) < this.followDist) {
-				// Get speed of vehicle in front
-				double vifSpeed = vehicleInFront.getSpeed();
-				this.speed = vifSpeed - (this.acc * stepToTimeRatio);
-			}
-			else {
-				// If the vehicle in front is not close enough speed up
-				this.speed = this.speed + (this.acc * stepToTimeRatio);
-			}
+			// Get speed of vehicle in front
+			double vifSpeed = vehicleInFront.getSpeed();
+			this.speed = vifSpeed - (this.acc * stepToTimeRatio);
+
 		} 
 		// If there is no vehicle in front just speed up
 		else {
