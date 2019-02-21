@@ -61,16 +61,30 @@ public class roadBuilder implements ContextBuilder<Object> {
 		}
 		
 		// Use list of ints from 0 to spaceWidth as possible positions for the vehicles
-		List<Integer> xCoords = IntStream.range(0,spaceWidth).boxed().collect(Collectors.toList());
+		List<Integer> spaceXCoords = IntStream.range(0,spaceWidth).boxed().collect(Collectors.toList());
 		Random randx = new Random();
+		ArrayList<Integer> agentXCoords = new ArrayList<Integer>();
+		for (int i=0; i<numVehicles; i++) {
+			// Get a random int within range of space and use this to sample
+			int randIndex = randx.nextInt(spaceXCoords.size());
+			
+			// Add the samples value to the list of xCoords and remove it from the possible set
+			agentXCoords.add(spaceXCoords.get(randIndex));
+			spaceXCoords.remove(randIndex);
+		}
+		
+		// Sort the random sample of x coords in descending order so that agents are added in order
+		Collections.sort(agentXCoords);
+		Collections.reverse(agentXCoords);
+		
 		// Set the position of each vehicle
+		int i = 0;
 		for (Object obj:context) {
-			int xCoordIndex = randx.nextInt(xCoords.size());
-			int xCoord = xCoords.get(xCoordIndex);
-			xCoords.remove(xCoordIndex); // To ensure that no two cars are initiated at the same spot
-			int yCoord = spaceHeight / 2; // Places vehicles half way up the sapce
+			int xCoord = agentXCoords.get(i);
+			int yCoord = spaceHeight / 2; // Places vehicles half way up the space
 			space.moveTo(obj, xCoord,yCoord);
 			grid.moveTo(obj, xCoord, yCoord);
+			i++;
 		}
 		
 		
