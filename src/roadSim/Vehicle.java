@@ -33,7 +33,7 @@ public class Vehicle {
 	 * of collections of agents. In the case of a space, the process may not be random
 	 * since the vehicle in the front might have priority.
 	 */
-	@ScheduledMethod(start = 1, interval = 1, shuffle = true)
+	@ScheduledMethod(start = 1, interval = 1, shuffle = false)
 	public void step() {
 		// Check for nearby cars
 		Vehicle vehicleInFront = getVehicleInFront();
